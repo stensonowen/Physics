@@ -36,7 +36,7 @@ void __inc_elapsed_time() {
 }
 END_OF_FUNCTION(__inc_elapsed_time);
 
-
+ 
 void Refresh_Pos(Projectile &P){
     P.x += P.xVel;
     P.xVel += P.xAccel;
