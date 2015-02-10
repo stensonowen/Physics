@@ -1,0 +1,155 @@
+#include <iostream>
+#include <allegro.h>
+#include <winalleg.h>
+#include <stdio.h>
+#include <math.h>
+#include "Projectile.h"
+
+#define GREY          makecol(128, 128, 128)
+#define WHITE         makecol(255, 255, 255)
+#define RED           makecol(255,   0,   0)
+#define GREEN         makecol(  0, 255,   0)
+#define BLUE          makecol(  0,   0, 255)
+#define YELLOW        makecol(255, 255,   0)
+#define ORANGE        makecol(255, 128,   0)
+#define CYAN          makecol(  0, 255, 255)
+#define PRUPLE        makecol(255,   0, 255)
+#define LIGHT_BLUE    makecol(128, 128, 255)
+#define PINK          makecol(255, 128, 128)
+#define LIGHT_GREEN   makecol(128, 255, 128)
+
+//                  ##,,##,,##,,##
+const double uGc = .00000000006673; //Universal Gravitational Constant = 6.67300 * 10^-11
+const double pi = 3.14159265358979; //To 15 digits
+
+
+using namespace std;
+
+BITMAP* Buffer;
+double distance;
+double x, y;
+double xVel, yVel;
+double xAccel, yAccel;
+double Space_Scale = 1;
+double Time_Scale = 1;
+
+void Refresh(Projectile &P){
+    P.x += P.xVel;
+    P.xVel += P.xAccel;
+
+    P.y += P.yVel;
+    P.yVel += P.yAccel;
+}
+/*
+void Gravity(Projectile &P1, Projectile &P2){
+    P1.acceleration = (uGc * P2.mass) / (sqrt((P2.x-P1.x)*(P2.x-P1.x) + (P2.y-P1.y)*(P2.y-P1.y))); // G * Mass (of other) divided by distance;
+    P2.acceleration = (uGc * P1.mass) / (sqrt((P2.x-P1.x)*(P2.x-P1.x) + (P2.y-P1.y)*(P2.y-P1.y))); // Distance = sqrt of Delta-x squared + Delta-y squared
+    P1.thetaVel = atan2((P1.y - P2.y), (P2.x - P1.x));
+        if(P1.x < P2.x)         P1.xAccel += (P1.acceleration * cos(P1.thetaVel)); // Need to be changed to degrees?
+        else if (P1.x > P2.x)   P1.xAccel -= (P1.acceleration * cos(P1.thetaVel)); // Need to be changed to degrees?
+        if(P1.y < P2.y)         P1.yAccel += (P1.acceleration * sin(P1.thetaVel)); //"                              "
+        else if(P1.y > P2.y)    P1.yAccel -= (P1.acceleration * sin(P1.thetaVel)); //"                              "
+
+    P2.thetaVel = atan2((P1.y - P2.y), (P2.x - P1.x)) - pi;
+        if(P1.x < P2.x)         P2.xAccel += (P2.acceleration * cos(P2.thetaVel)); // Need to be changed to degrees?
+        else if (P1.x > P2.x)   P2.xAccel -= (P2.acceleration * cos(P2.thetaVel)); // Need to be changed to degrees?
+        if(P1.y < P2.y)         P2.yAccel += (P2.acceleration * sin(P2.thetaVel)); //"                              "
+        else if(P1.y > P2.y)    P2.yAccel -= (P2.acceleration * sin(P2.thetaVel)); //"                              "
+}
+*/
+
+void Gravity(Projectile &P1, Projectile &P2){
+//    if(P1.x < P2.x){ P1.xAccel += (uGc * P2.mass) / ((P2.x - P1.x) * fabs(P2.x - P1.x)); // G * Mass (of other) divided by distance;
+//        cout << (uGc * P2.mass) / ((P2.x - P1.x) * fabs(P2.x - P1.x)) << endl;}
+//
+//    if(P1.x > P2.x){ P1.xAccel -= (uGc * P2.mass) / ((P1.x - P2.x) * fabs(P1.x - P2.x)); // G * Mass (of other) divided by distance;
+//        cout << (uGc * P2.mass) / ((P1.x - P2.x) * fabs(P1.x - P2.x)) << endl;
+//    }
+    cout << P1.x << ":\t\t" << P1.xAccel << "\t\t + \t\t" << (uGc * P2.mass) / ((P2.x - P1.x) * fabs(P2.x - P1.x)) << endl;
+    P1.xAccel += ((uGc * P2.mass) / ((P2.x - P1.x) * fabs(P2.x - P1.x)));
+
+    //P1.xAccel += (uGc * P2.mass) / ((P2.x - P1.x) * fabs(P2.x - P1.x)); // G * Mass (of other) divided by distance;
+
+    //if(P1.y < P2.y) P1.yAccel += (uGc * P2.mass) /  (P2.y - P1.y); // G * Mass (of other) divided by distance;
+    //if(P1.y > P2.y) P1.yAccel -= (uGc * P2.mass) / (P2.y - P1.y); // G * Mass (of other) divided by distance;
+    //if()                            = (uGc * P1.mass) / (P1.x - P2.x); // Distance = sqrt of Delta-x squared + Delta-y squared
+
+    /*
+    P1.thetaVel = atan2((P1.y - P2.y), (P2.x - P1.x));
+        if(P1.x < P2.x)         P1.xAccel += (P1.acceleration * cos(P1.thetaVel)); // Need to be changed to degrees?
+        else if (P1.x > P2.x)   P1.xAccel -= (P1.acceleration * cos(P1.thetaVel)); // Need to be changed to degrees?
+        if(P1.y < P2.y)         P1.yAccel += (P1.acceleration * sin(P1.thetaVel)); //"                              "
+        else if(P1.y > P2.y)    P1.yAccel -= (P1.acceleration * sin(P1.thetaVel)); //"                              "
+
+    P2.thetaVel = atan2((P1.y - P2.y), (P2.x - P1.x)) - pi;
+        if(P1.x < P2.x)         P2.xAccel += (P2.acceleration * cos(P2.thetaVel)); // Need to be changed to degrees?
+        else if (P1.x > P2.x)   P2.xAccel -= (P2.acceleration * cos(P2.thetaVel)); // Need to be changed to degrees?
+        if(P1.y < P2.y)         P2.yAccel += (P2.acceleration * sin(P2.thetaVel)); //"                              "
+        else if(P1.y > P2.y)    P2.yAccel -= (P2.acceleration * sin(P2.thetaVel)); //"                              "*/
+}
+
+
+
+
+int main()
+{
+    allegro_init();
+    install_keyboard();
+    install_timer();
+    set_gfx_mode(GFX_AUTODETECT_WINDOWED,640,480,0,0);
+    Buffer = create_bitmap(640, 480);
+
+    readkey();
+
+    Space_Scale = 10;       //1 meter = n pixels
+    Time_Scale = 25;        //Program updates n times per second; ~~INVERSE RELATIONSHIP~~
+//#######################################################################################################################
+    Projectile Ball;
+
+    Ball.radius = 5;
+    Ball.Hue = BLUE;
+    Ball.mass = 1; //previously m=250000
+
+    Ball.x = 315;
+    Ball.xVel = 0 * Space_Scale / Time_Scale;       //n pixels/sec is proportional to 10n m/s
+    Ball.xAccel = 0 * Space_Scale / Time_Scale;            // Meters per second, once more
+
+    Ball.y = 240;
+    Ball.yVel = 0 * Space_Scale / Time_Scale;
+    Ball.yAccel = 0 * Space_Scale / Time_Scale;
+//#######################################################################################################################
+    Projectile Sphere;
+
+    Sphere.radius = 9;
+    Sphere.Hue = RED;
+    Sphere.mass = 5.9742*10^24; //previously m=800000
+
+    Sphere.x = 320;
+    Sphere.xVel = 0 * Space_Scale / Time_Scale;       //n pixels/sec is proportional to 10n m/s
+    Sphere.xAccel = 0 * Space_Scale / Time_Scale;            // Meters per second, once more
+
+    Sphere.y = 240;
+    Sphere.yVel = 0 * Space_Scale / Time_Scale;
+    Sphere.yAccel = 0 * Space_Scale / Time_Scale;
+//#######################################################################################################################
+
+    while(!key[KEY_ESC]){
+        clear_to_color(Buffer,makecol(0, 0, 0));
+        circlefill(Buffer, Sphere.x, Sphere.y, Sphere.radius, Sphere.Hue); //DRAW PROJECTILE
+        circlefill(Buffer, Ball.x, Ball.y, Ball.radius, Ball.Hue); //DRAW PROJECTILE
+
+
+        Refresh(Ball);
+        Refresh(Sphere);
+
+        Gravity(Ball, Sphere);
+
+//cout << Ball.x << "                     " << Ball.xAccel << "\t\t\t" << (uGc * Sphere.mass) / (Sphere.x - Ball.x) << endl;
+        blit(Buffer, screen, 0, 0, 0, 0, Buffer->w, Buffer->h);
+        Sleep(1000 / Time_Scale);         //All other values are increased by a value of 1000/n
+    }
+    readkey();
+
+    return 0;
+}
+END_OF_MAIN()
